@@ -3,6 +3,7 @@ import { createGameEngine } from './engine/gameEngine';
 import type { GameState } from './engine/gameEngine';
 import { BoardGrid } from './components/BoardGrid';
 import { TurnIndicator } from './components/TurnIndicator';
+import { OutcomeDisplay } from './components/OutcomeDisplay';
 
 export function App() {
   const engineRef = useRef(createGameEngine());
@@ -24,11 +25,9 @@ export function App() {
       {/* Turn indicator — visible only during active gameplay */}
       {!isGameOver && <TurnIndicator currentPlayer={gameState.currentPlayer} />}
 
-      {/* Outcome placeholder — will be replaced by OutcomeDisplay in WO-009 */}
-      {isGameOver && (
-        <p className="outcome-placeholder" aria-live="assertive">
-          {gameState.status === 'win' ? `Player ${gameState.winner} Wins!` : "It's a Draw!"}
-        </p>
+      {/* Outcome display — visible only when game ends */}
+      {isGameOver && gameState.status !== 'playing' && (
+        <OutcomeDisplay status={gameState.status} winner={gameState.winner} />
       )}
 
       <BoardGrid

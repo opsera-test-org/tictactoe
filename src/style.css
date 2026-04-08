@@ -59,13 +59,37 @@ h1 {
   color: #fc8181; /* red for O */
 }
 
-/* ── Outcome placeholder (replaced by OutcomeDisplay in WO-009) ─── */
+/* ── Outcome display ─────────────────────────────────────────────── */
 
-.outcome-placeholder {
-  font-size: 1.5rem;
+.outcome-display {
+  text-align: center;
+  min-height: 2.5rem; /* prevents layout shift */
+}
+
+.outcome-display__message {
+  font-size: 1.75rem;
   font-weight: 700;
-  color: #f6e05e;
-  min-height: 1.75rem;
+  letter-spacing: 0.03em;
+}
+
+.outcome-display__message--win {
+  color: #f6e05e; /* yellow highlight for win */
+}
+
+.outcome-display__message--draw {
+  color: #a0aec0; /* muted for draw */
+}
+
+.outcome-display__winner {
+  font-size: 2rem;
+}
+
+.outcome-display__winner--x {
+  color: #63b3ed; /* blue for X */
+}
+
+.outcome-display__winner--o {
+  color: #fc8181; /* red for O */
 }
 
 /* ── Board grid ──────────────────────────────────────────────────── */

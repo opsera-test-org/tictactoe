@@ -74,7 +74,7 @@ describe('App — TurnIndicator integration', () => {
     expect(indicator?.textContent).toContain('O');
   });
 
-  it('hides turn indicator and shows outcome message when game ends in a win', () => {
+  it('hides turn indicator and shows OutcomeDisplay when game ends in a win', () => {
     const container = mountApp();
     // X wins via top row: 0, 1, 2 — O plays 3, 4
     const cells = container.querySelectorAll('[data-testid]') as unknown as HTMLButtonElement[];
@@ -95,11 +95,12 @@ describe('App — TurnIndicator integration', () => {
     }); // X wins
 
     expect(container.querySelector('.turn-indicator')).toBeNull();
-    const outcome = container.querySelector('.outcome-placeholder');
-    expect(outcome?.textContent).toContain('Player X Wins!');
+    const outcome = container.querySelector('.outcome-display');
+    expect(outcome?.textContent).toContain('X');
+    expect(outcome?.textContent).toContain('Wins!');
   });
 
-  it('hides turn indicator and shows draw outcome when game ends in a draw', () => {
+  it('hides turn indicator and shows draw OutcomeDisplay when game ends in a draw', () => {
     const container = mountApp();
     // Force a draw: X O X / O X X / O X O
     const order = [0, 1, 2, 4, 3, 6, 5, 8, 7];
@@ -111,7 +112,55 @@ describe('App — TurnIndicator integration', () => {
     });
 
     expect(container.querySelector('.turn-indicator')).toBeNull();
-    const outcome = container.querySelector('.outcome-placeholder');
+    const outcome = container.querySelector('.outcome-display');
     expect(outcome?.textContent).toContain('Draw');
+  });
+});
+
+describe('App — OutcomeDisplay + winning cells integration', () => {
+  it('outcome display is absent during active gameplay', () => {
+    const container = mountApp();
+    expect(container.querySelector('.outcome-display')).toBeNull();
+  });
+
+  it('winning cells get cell--winning class after X wins', () => {
+    const container = mountApp();
+    const cells = container.querySelectorAll('[data-testid]') as unknown as HTMLButtonElement[];
+    act(() => {
+      cells[0].click();
+    }); // X
+    act(() => {
+      cells[3].click();
+    }); // O
+    act(() => {
+      cells[1].click();
+    }); // X
+    act(() => {
+      cells[4].click();
+    }); // O
+    act(() => {
+      cells[2].click();
+    }); // X wins top row [0,1,2]
+
+    // Cells 0, 1, 2 should be highlighted
+    expect(cells[0].classList.contains('cell--winning')).toBe(true);
+    expect(cells[1].classList.contains('cell--winning')).toBe(true);
+    expect(cells[2].classList.contains('cell--winning')).toBe(true);
+    // Non-winning cell should not be highlighted
+    expect(cells[3].classList.contains('cell--winning')).toBe(false);
+  });
+
+  it('no cells are highlighted on a draw', () => {
+    const container = mountApp();
+    const order = [0, 1, 2, 4, 3, 6, 5, 8, 7];
+    const cells = container.querySelectorAll('[data-testid]') as unknown as HTMLButtonElement[];
+    act(() => {
+      for (const idx of order) {
+        cells[idx].click();
+      }
+    });
+
+    const winningCells = container.querySelectorAll('.cell--winning');
+    expect(winningCells).toHaveLength(0);
   });
 });
