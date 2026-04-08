@@ -16,23 +16,27 @@ export function App() {
     }
   }
 
-  const isGameOver = gameState.status !== 'playing';
+  // No win condition — game ends only on a draw
+  const isGameOver = gameState.status === 'draw';
 
   return (
     <main>
       <h1>Tic Tac Toe</h1>
 
       {/* Turn indicator — visible only during active gameplay */}
-      {!isGameOver && <TurnIndicator currentPlayer={gameState.currentPlayer} />}
-
-      {/* Outcome display — visible only when game ends */}
-      {isGameOver && gameState.status !== 'playing' && (
-        <OutcomeDisplay status={gameState.status} winner={gameState.winner} />
+      {!isGameOver && (
+        <TurnIndicator
+          currentPlayer={gameState.currentPlayer}
+          movesRemaining={gameState.movesRemainingThisTurn}
+        />
       )}
+
+      {/* Outcome display — only shown for a draw; wins are ignored */}
+      {isGameOver && <OutcomeDisplay status="draw" winner={null} />}
 
       <BoardGrid
         board={gameState.board}
-        winningLine={gameState.winningLine}
+        winningLine={null}
         isGameOver={isGameOver}
         onCellClick={handleCellClick}
       />

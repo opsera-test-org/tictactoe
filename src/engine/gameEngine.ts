@@ -1,15 +1,22 @@
 export type Player = 'X' | 'O';
 export type CellValue = Player | '';
-export type GameStatus = 'playing' | 'win' | 'draw';
+export type GameStatus = 'playing' | 'draw';
 
 export interface GameState {
   /** 9-element array representing the board, index 0–8 left-to-right, top-to-bottom. */
   board: CellValue[];
   currentPlayer: Player;
   status: GameStatus;
-  winner: Player | null;
-  /** Indices of the three winning cells; null when no winner yet. */
-  winningLine: number[] | null;
+  winner: null;
+  /** Always null — this game has no win condition. */
+  winningLine: null;
+  /**
+   * Moves the current player still has left in their turn.
+   * Each player gets 2 consecutive moves before the turn passes to the other.
+   * Value is 2 at the start of a turn; drops to 1 after the first move; resets
+   * to 2 when the second move is played and the turn passes to the next player.
+   */
+  movesRemainingThisTurn: number;
 }
 
 export interface GameEngine {
@@ -19,7 +26,7 @@ export interface GameEngine {
    * Returns `false` without mutating state when:
    *   - `cellIndex` is out of bounds (< 0 or > 8)
    *   - the cell is already occupied
-   *   - the game is no longer in 'playing' status
+   *   - the game is no longer in 'playing' status (draw)
    */
   makeMove(cellIndex: number): boolean;
 
@@ -31,7 +38,8 @@ export interface GameEngine {
 }
 
 /**
- * All 8 winning combinations: 3 rows, 3 columns, 2 diagonals.
+ * All 8 winning combinations (kept as a reference utility even though this
+ * game does not enforce a win condition).
  * Indices refer to board positions 0–8 (left-to-right, top-to-bottom).
  *
  *  0 | 1 | 2
@@ -52,8 +60,9 @@ export const WIN_LINES: ReadonlyArray<readonly [number, number, number]> = [
 ];
 
 /**
- * Pure function — checks whether `player` has completed any winning line on `board`.
- * Returns the winning line indices if found, or `null` otherwise.
+ * Pure utility — checks whether `player` has completed any winning line on
+ * `board`. Not used by makeMove in this no-winner variant, but exported for
+ * external use and testing.
  */
 export function checkWin(
   board: CellValue[],
@@ -70,7 +79,6 @@ export function checkWin(
 
 /**
  * Pure function — returns `true` when all 9 cells are filled (draw condition).
- * Must only be called after confirming no winner exists.
  */
 export function checkDraw(board: CellValue[]): boolean {
   return board.every((cell) => cell !== '');
@@ -83,12 +91,14 @@ function createInitialState(): GameState {
     status: 'playing',
     winner: null,
     winningLine: null,
+    movesRemainingThisTurn: 2,
   };
 }
 
 /**
  * Factory that creates an isolated GameEngine instance.
- * All game state is encapsulated; no global variables are used.
+ * Turn order: each player makes 2 consecutive moves before the turn passes.
+ * The game ends only when all 9 cells are filled (draw — there is no winner).
  */
 export function createGameEngine(): GameEngine {
   let state: GameState = createInitialState();
@@ -101,30 +111,23 @@ export function createGameEngine(): GameEngine {
     const newBoard = [...state.board] as CellValue[];
     newBoard[cellIndex] = state.currentPlayer;
 
-    const winLine = checkWin(newBoard, state.currentPlayer);
+    if (checkDraw(newBoard)) {
+      state = { ...state, board: newBoard, status: 'draw' };
+      return true;
+    }
 
-    if (winLine) {
-      // Game over — current player wins; do not toggle turn
-      state = {
-        ...state,
-        board: newBoard,
-        status: 'win',
-        winner: state.currentPlayer,
-        winningLine: [...winLine],
-      };
-    } else if (checkDraw(newBoard)) {
-      // Game over — all 9 cells filled, no winner
-      state = {
-        ...state,
-        board: newBoard,
-        status: 'draw',
-      };
-    } else {
+    const newMovesRemaining = state.movesRemainingThisTurn - 1;
+    if (newMovesRemaining === 0) {
+      // Current player used both moves — pass turn to the other player
       state = {
         ...state,
         board: newBoard,
         currentPlayer: state.currentPlayer === 'X' ? 'O' : 'X',
+        movesRemainingThisTurn: 2,
       };
+    } else {
+      // Current player still has one more move this turn
+      state = { ...state, board: newBoard, movesRemainingThisTurn: newMovesRemaining };
     }
 
     return true;

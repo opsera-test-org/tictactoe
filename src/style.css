@@ -39,11 +39,26 @@ h1 {
 /* ── Turn indicator ──────────────────────────────────────────────── */
 
 .turn-indicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  min-height: 3.5rem; /* prevents layout shift */
+}
+
+.turn-indicator__player {
   font-size: 1.25rem;
   font-weight: 500;
   color: #cbd5e0;
   letter-spacing: 0.02em;
-  min-height: 1.75rem; /* prevents layout shift when text swaps */
+}
+
+.turn-indicator__moves {
+  font-size: 0.85rem;
+  font-weight: 400;
+  color: #718096;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
 }
 
 .turn-indicator__mark {

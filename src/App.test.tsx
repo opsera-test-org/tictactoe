@@ -12,6 +12,9 @@ function mountApp() {
   return container;
 }
 
+// Fill all 9 cells sequentially to trigger a draw
+const FULL_BOARD_ORDER = [0, 1, 2, 3, 4, 5, 6, 7, 8];
+
 describe('App', () => {
   it('renders the Tic Tac Toe heading', () => {
     const container = mountApp();
@@ -20,8 +23,7 @@ describe('App', () => {
 
   it('renders a 3x3 board with 9 cells', () => {
     const container = mountApp();
-    const cells = container.querySelectorAll('button');
-    expect(cells).toHaveLength(9);
+    expect(container.querySelectorAll('button')).toHaveLength(9);
   });
 
   it('places X (square mark) on the first cell click', () => {
@@ -33,24 +35,39 @@ describe('App', () => {
     expect(cell0.querySelector('.mark--x')).not.toBeNull();
   });
 
-  it('places O (triangle mark) on the second cell click', () => {
+  it('places X again on the second click (X gets 2 moves)', () => {
     const container = mountApp();
     const cells = container.querySelectorAll('[data-testid]') as unknown as HTMLButtonElement[];
     act(() => {
-      cells[0].click(); // X
-    });
+      cells[0].click();
+    }); // X move 1/2
     act(() => {
-      cells[1].click(); // O
-    });
-    expect(cells[1].querySelector('.mark--o')).not.toBeNull();
+      cells[1].click();
+    }); // X move 2/2
+    expect(cells[1].querySelector('.mark--x')).not.toBeNull();
+  });
+
+  it('places O (triangle mark) on the third click (O first move)', () => {
+    const container = mountApp();
+    const cells = container.querySelectorAll('[data-testid]') as unknown as HTMLButtonElement[];
+    act(() => {
+      cells[0].click();
+    }); // X 1/2
+    act(() => {
+      cells[1].click();
+    }); // X 2/2
+    act(() => {
+      cells[2].click();
+    }); // O 1/2
+    expect(cells[2].querySelector('.mark--o')).not.toBeNull();
   });
 
   it('ignores clicks on already-occupied cells', () => {
     const container = mountApp();
     const cell = container.querySelector('[data-testid="cell-0"]') as HTMLButtonElement;
     act(() => {
-      cell.click(); // X
-      cell.click(); // should be ignored
+      cell.click(); // X move 1
+      cell.click(); // rejected — occupied
     });
     expect(cell.querySelector('.mark--x')).not.toBeNull();
     expect(cell.querySelectorAll('.mark')).toHaveLength(1);
@@ -58,110 +75,79 @@ describe('App', () => {
 });
 
 describe('App — TurnIndicator integration', () => {
-  it("shows Player X's turn indicator on game start", () => {
+  it('shows "Move 1 of 2" for Player X on game start', () => {
     const container = mountApp();
     const indicator = container.querySelector('.turn-indicator');
     expect(indicator).not.toBeNull();
-    expect(indicator?.textContent).toContain('X');
+    expect(indicator?.querySelector('.turn-indicator__player')?.textContent).toContain('X');
+    expect(indicator?.querySelector('.turn-indicator__moves')?.textContent).toContain('1 of 2');
   });
 
-  it("toggles to Player O's turn after X moves", () => {
+  it('shows "Move 2 of 2" for Player X after their first move', () => {
     const container = mountApp();
     const cell0 = container.querySelector('[data-testid="cell-0"]') as HTMLButtonElement;
     act(() => {
       cell0.click();
-    });
-    const indicator = container.querySelector('.turn-indicator');
-    expect(indicator?.textContent).toContain('O');
+    }); // X move 1/2
+    const moves = container.querySelector('.turn-indicator__moves');
+    expect(moves?.textContent).toContain('2 of 2');
+    expect(container.querySelector('.turn-indicator__mark--x')).not.toBeNull();
   });
 
-  it('hides turn indicator and shows OutcomeDisplay when game ends in a win', () => {
+  it('switches to Player O "Move 1 of 2" after X uses both moves', () => {
     const container = mountApp();
-    // X wins via top row: 0, 1, 2 — O plays 3, 4
     const cells = container.querySelectorAll('[data-testid]') as unknown as HTMLButtonElement[];
     act(() => {
       cells[0].click();
-    }); // X
-    act(() => {
-      cells[3].click();
-    }); // O
+    }); // X 1/2
     act(() => {
       cells[1].click();
-    }); // X
-    act(() => {
-      cells[4].click();
-    }); // O
-    act(() => {
-      cells[2].click();
-    }); // X wins
-
-    expect(container.querySelector('.turn-indicator')).toBeNull();
-    const outcome = container.querySelector('.outcome-display');
-    expect(outcome?.textContent).toContain('X');
-    expect(outcome?.textContent).toContain('Wins!');
+    }); // X 2/2 → O
+    expect(container.querySelector('.turn-indicator__mark--o')).not.toBeNull();
+    expect(container.querySelector('.turn-indicator__moves')?.textContent).toContain('1 of 2');
   });
 
-  it('hides turn indicator and shows draw OutcomeDisplay when game ends in a draw', () => {
+  it('hides turn indicator when board is full (draw)', () => {
     const container = mountApp();
-    // Force a draw: X O X / O X X / O X O
-    const order = [0, 1, 2, 4, 3, 6, 5, 8, 7];
     const cells = container.querySelectorAll('[data-testid]') as unknown as HTMLButtonElement[];
     act(() => {
-      for (const idx of order) {
-        cells[idx].click();
-      }
+      for (const idx of FULL_BOARD_ORDER) cells[idx].click();
     });
-
     expect(container.querySelector('.turn-indicator')).toBeNull();
-    const outcome = container.querySelector('.outcome-display');
-    expect(outcome?.textContent).toContain('Draw');
+    expect(container.querySelector('.outcome-display')).not.toBeNull();
   });
 });
 
-describe('App — OutcomeDisplay + winning cells integration', () => {
+describe('App — no-win rule: cells are never highlighted', () => {
   it('outcome display is absent during active gameplay', () => {
     const container = mountApp();
     expect(container.querySelector('.outcome-display')).toBeNull();
   });
 
-  it('winning cells get cell--winning class after X wins', () => {
+  it('no cells have cell--winning class at any point', () => {
     const container = mountApp();
     const cells = container.querySelectorAll('[data-testid]') as unknown as HTMLButtonElement[];
+    // Play several moves including what would be a win pattern in classic tic tac toe
     act(() => {
       cells[0].click();
-    }); // X
-    act(() => {
-      cells[3].click();
-    }); // O
+    }); // X 1/2
     act(() => {
       cells[1].click();
-    }); // X
-    act(() => {
-      cells[4].click();
-    }); // O
+    }); // X 2/2
     act(() => {
       cells[2].click();
-    }); // X wins top row [0,1,2]
-
-    // Cells 0, 1, 2 should be highlighted
-    expect(cells[0].classList.contains('cell--winning')).toBe(true);
-    expect(cells[1].classList.contains('cell--winning')).toBe(true);
-    expect(cells[2].classList.contains('cell--winning')).toBe(true);
-    // Non-winning cell should not be highlighted
-    expect(cells[3].classList.contains('cell--winning')).toBe(false);
+    }); // O 1/2 — top row now X,X,O
+    expect(container.querySelectorAll('.cell--winning')).toHaveLength(0);
   });
 
-  it('no cells are highlighted on a draw', () => {
+  it('draw outcome shows when board is fully filled', () => {
     const container = mountApp();
-    const order = [0, 1, 2, 4, 3, 6, 5, 8, 7];
     const cells = container.querySelectorAll('[data-testid]') as unknown as HTMLButtonElement[];
     act(() => {
-      for (const idx of order) {
-        cells[idx].click();
-      }
+      for (const idx of FULL_BOARD_ORDER) cells[idx].click();
     });
-
-    const winningCells = container.querySelectorAll('.cell--winning');
-    expect(winningCells).toHaveLength(0);
+    const outcome = container.querySelector('.outcome-display');
+    expect(outcome?.textContent).toContain('Draw');
+    expect(container.querySelectorAll('.cell--winning')).toHaveLength(0);
   });
 });
