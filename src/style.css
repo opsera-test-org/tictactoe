@@ -36,6 +36,38 @@ h1 {
   color: #e2e8f0;
 }
 
+/* ── Turn indicator ──────────────────────────────────────────────── */
+
+.turn-indicator {
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: #cbd5e0;
+  letter-spacing: 0.02em;
+  min-height: 1.75rem; /* prevents layout shift when text swaps */
+}
+
+.turn-indicator__mark {
+  font-weight: 700;
+  font-size: 1.35rem;
+}
+
+.turn-indicator__mark--x {
+  color: #63b3ed; /* blue for X */
+}
+
+.turn-indicator__mark--o {
+  color: #fc8181; /* red for O */
+}
+
+/* ── Outcome placeholder (replaced by OutcomeDisplay in WO-009) ─── */
+
+.outcome-placeholder {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #f6e05e;
+  min-height: 1.75rem;
+}
+
 /* ── Board grid ──────────────────────────────────────────────────── */
 
 .board {
