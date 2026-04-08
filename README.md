@@ -75,24 +75,24 @@ tictactoe/
 
 ## Technology Stack
 
-| Layer         | Technology          |
-|--------------|---------------------|
-| Language      | TypeScript 5.x      |
-| UI Framework  | Preact 10.x         |
-| Build Tool    | Vite 6.x            |
-| Test Runner   | Vitest 3.x          |
-| Linter        | ESLint 9.x          |
-| Hosting       | AWS S3 + CloudFront |
-| CI/CD         | GitHub Actions      |
+| Layer        | Technology          |
+| ------------ | ------------------- |
+| Language     | TypeScript 5.x      |
+| UI Framework | Preact 10.x         |
+| Build Tool   | Vite 6.x            |
+| Test Runner  | Vitest 3.x          |
+| Linter       | ESLint 9.x          |
+| Hosting      | AWS S3 + CloudFront |
+| CI/CD        | GitHub Actions      |
 
 ## CI/CD Pipeline
 
 ### How it works
 
-| Trigger | Workflow | Steps |
-|---------|----------|-------|
-| Pull Request to `main` | `ci.yml` | Install → Lint → Build → Test |
-| Push to `main` | `deploy.yml` | Install → Lint → Test → Build → S3 sync → CloudFront invalidation |
+| Trigger                | Workflow     | Steps                                                             |
+| ---------------------- | ------------ | ----------------------------------------------------------------- |
+| Pull Request to `main` | `ci.yml`     | Install → Lint → Build → Test                                     |
+| Push to `main`         | `deploy.yml` | Install → Lint → Test → Build → S3 sync → CloudFront invalidation |
 
 ### Cache Strategy
 
@@ -103,13 +103,13 @@ tictactoe/
 
 Configure these in **Settings → Secrets and variables → Actions** before the deploy workflow will run:
 
-| Secret | Description |
-|--------|-------------|
-| `AWS_DEPLOY_ROLE_ARN` | ARN of the IAM role to assume via OIDC (e.g. `arn:aws:iam::123456789:role/github-deploy`) |
-| `AWS_REGION` | AWS region of the S3 bucket and CloudFront distribution (e.g. `us-east-1`) |
-| `S3_BUCKET` | S3 bucket name (e.g. `tictactoe-prod-assets`) |
-| `CLOUDFRONT_DISTRIBUTION_ID` | CloudFront distribution ID (e.g. `E1ABCDEF2GHIJ`) |
-| `PRODUCTION_DOMAIN` | Public domain name (e.g. `tictactoe.app`) |
+| Secret                       | Description                                                                               |
+| ---------------------------- | ----------------------------------------------------------------------------------------- |
+| `AWS_DEPLOY_ROLE_ARN`        | ARN of the IAM role to assume via OIDC (e.g. `arn:aws:iam::123456789:role/github-deploy`) |
+| `AWS_REGION`                 | AWS region of the S3 bucket and CloudFront distribution (e.g. `us-east-1`)                |
+| `S3_BUCKET`                  | S3 bucket name (e.g. `tictactoe-prod-assets`)                                             |
+| `CLOUDFRONT_DISTRIBUTION_ID` | CloudFront distribution ID (e.g. `E1ABCDEF2GHIJ`)                                         |
+| `PRODUCTION_DOMAIN`          | Public domain name (e.g. `tictactoe.app`)                                                 |
 
 ### AWS IAM Role Policy
 
@@ -122,10 +122,7 @@ The deploy role requires the following minimum permissions:
     {
       "Effect": "Allow",
       "Action": ["s3:PutObject", "s3:DeleteObject", "s3:ListBucket"],
-      "Resource": [
-        "arn:aws:s3:::YOUR_BUCKET_NAME",
-        "arn:aws:s3:::YOUR_BUCKET_NAME/*"
-      ]
+      "Resource": ["arn:aws:s3:::YOUR_BUCKET_NAME", "arn:aws:s3:::YOUR_BUCKET_NAME/*"]
     },
     {
       "Effect": "Allow",

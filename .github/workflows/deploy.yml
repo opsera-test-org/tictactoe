@@ -15,7 +15,7 @@ jobs:
 
     permissions:
       contents: read
-      id-token: write  # Required for OIDC-based AWS auth
+      id-token: write # Required for OIDC-based AWS auth
 
     steps:
       - name: Checkout
