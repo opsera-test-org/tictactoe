@@ -8,7 +8,7 @@ export interface GameState {
   currentPlayer: Player;
   status: GameStatus;
   winner: Player | null;
-  /** Indices of the three winning cells; null when no winner yet. Set by win detection (WO-005). */
+  /** Indices of the three winning cells; null when no winner yet. */
   winningLine: number[] | null;
 }
 
@@ -26,8 +26,46 @@ export interface GameEngine {
   /** Returns a shallow-cloned snapshot of the current game state. */
   getState(): GameState;
 
-  /** Resets the board to the initial state so a new game can begin. Added in WO-006. */
+  /** Resets the board to the initial state so a new game can begin. */
   reset(): void;
+}
+
+/**
+ * All 8 winning combinations: 3 rows, 3 columns, 2 diagonals.
+ * Indices refer to board positions 0–8 (left-to-right, top-to-bottom).
+ *
+ *  0 | 1 | 2
+ *  ---------
+ *  3 | 4 | 5
+ *  ---------
+ *  6 | 7 | 8
+ */
+export const WIN_LINES: ReadonlyArray<readonly [number, number, number]> = [
+  [0, 1, 2], // row 0
+  [3, 4, 5], // row 1
+  [6, 7, 8], // row 2
+  [0, 3, 6], // col 0
+  [1, 4, 7], // col 1
+  [2, 5, 8], // col 2
+  [0, 4, 8], // main diagonal
+  [2, 4, 6], // anti-diagonal
+];
+
+/**
+ * Pure function — checks whether `player` has completed any winning line on `board`.
+ * Returns the winning line indices if found, or `null` otherwise.
+ */
+export function checkWin(
+  board: CellValue[],
+  player: Player,
+): readonly [number, number, number] | null {
+  for (const line of WIN_LINES) {
+    const [a, b, c] = line;
+    if (board[a] === player && board[b] === player && board[c] === player) {
+      return line;
+    }
+  }
+  return null;
 }
 
 function createInitialState(): GameState {
@@ -55,11 +93,24 @@ export function createGameEngine(): GameEngine {
     const newBoard = [...state.board] as CellValue[];
     newBoard[cellIndex] = state.currentPlayer;
 
-    state = {
-      ...state,
-      board: newBoard,
-      currentPlayer: state.currentPlayer === 'X' ? 'O' : 'X',
-    };
+    const winLine = checkWin(newBoard, state.currentPlayer);
+
+    if (winLine) {
+      // Game over — current player wins; do not toggle turn
+      state = {
+        ...state,
+        board: newBoard,
+        status: 'win',
+        winner: state.currentPlayer,
+        winningLine: [...winLine],
+      };
+    } else {
+      state = {
+        ...state,
+        board: newBoard,
+        currentPlayer: state.currentPlayer === 'X' ? 'O' : 'X',
+      };
+    }
 
     return true;
   }
