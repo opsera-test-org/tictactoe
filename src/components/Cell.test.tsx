@@ -32,19 +32,26 @@ describe('Cell', () => {
     expect(button).toBeTruthy();
   });
 
-  it('renders empty content for an empty cell', () => {
+  it('renders no shape for an empty cell', () => {
     const { button } = renderCell({ value: '' });
-    expect(button.textContent).toBe('');
+    expect(button.querySelector('.mark')).toBeNull();
   });
 
-  it('renders X for an X cell', () => {
+  it('renders the square mark for an X cell', () => {
     const { button } = renderCell({ value: 'X' });
-    expect(button.textContent).toBe('X');
+    expect(button.querySelector('.mark--x')).not.toBeNull();
+    expect(button.querySelector('.mark--o')).toBeNull();
   });
 
-  it('renders O for an O cell', () => {
+  it('renders the triangle mark for an O cell', () => {
     const { button } = renderCell({ value: 'O' });
-    expect(button.textContent).toBe('O');
+    expect(button.querySelector('.mark--o')).not.toBeNull();
+    expect(button.querySelector('.mark--x')).toBeNull();
+  });
+
+  it('mark span has aria-hidden="true"', () => {
+    const { button } = renderCell({ value: 'X' });
+    expect(button.querySelector('.mark')?.getAttribute('aria-hidden')).toBe('true');
   });
 
   it('has data-testid matching the cell index', () => {

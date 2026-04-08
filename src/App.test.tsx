@@ -24,16 +24,16 @@ describe('App', () => {
     expect(cells).toHaveLength(9);
   });
 
-  it('places X on the first cell click', () => {
+  it('places X (square mark) on the first cell click', () => {
     const container = mountApp();
     const cell0 = container.querySelector('[data-testid="cell-0"]') as HTMLButtonElement;
     act(() => {
       cell0.click();
     });
-    expect(cell0.textContent).toBe('X');
+    expect(cell0.querySelector('.mark--x')).not.toBeNull();
   });
 
-  it('places O on the second cell click', () => {
+  it('places O (triangle mark) on the second cell click', () => {
     const container = mountApp();
     const cells = container.querySelectorAll('[data-testid]') as unknown as HTMLButtonElement[];
     act(() => {
@@ -42,7 +42,7 @@ describe('App', () => {
     act(() => {
       cells[1].click(); // O
     });
-    expect(cells[1].textContent).toBe('O');
+    expect(cells[1].querySelector('.mark--o')).not.toBeNull();
   });
 
   it('ignores clicks on already-occupied cells', () => {
@@ -52,7 +52,8 @@ describe('App', () => {
       cell.click(); // X
       cell.click(); // should be ignored
     });
-    expect(cell.textContent).toBe('X');
+    expect(cell.querySelector('.mark--x')).not.toBeNull();
+    expect(cell.querySelectorAll('.mark')).toHaveLength(1);
   });
 });
 

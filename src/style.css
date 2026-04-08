@@ -109,12 +109,9 @@ h1 {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: clamp(2rem, 8vw, 3.5rem);
-  font-weight: 700;
   border: 2px solid #4a5568;
   border-radius: 8px;
   background-color: #2d3748;
-  color: #e2e8f0;
   cursor: pointer;
   transition:
     background-color 0.15s ease,
@@ -124,6 +121,29 @@ h1 {
   /* Minimum 48×48 px touch target (WCAG 2.5.5) */
   min-width: 48px;
   min-height: 48px;
+}
+
+/* ── Mark shapes ─────────────────────────────────────────────────── */
+
+.mark {
+  display: block;
+  pointer-events: none;
+}
+
+/* X → solid square */
+.mark--x {
+  width: 52%;
+  aspect-ratio: 1;
+  background-color: #63b3ed;
+  border-radius: 6px;
+}
+
+/* O → upward-pointing triangle */
+.mark--o {
+  width: 52%;
+  aspect-ratio: 1;
+  background-color: #fc8181;
+  clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
 }
 
 .cell:hover:not(:disabled) {

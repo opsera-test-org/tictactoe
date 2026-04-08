@@ -37,7 +37,7 @@ export function Cell({ value, index, isWinning, disabled, onClick }: CellProps) 
       aria-label={value ? `Cell ${index + 1}: ${value}` : `Cell ${index + 1}: empty`}
       data-testid={`cell-${index}`}
     >
-      {value}
+      {value !== '' && <span className={`mark mark--${value.toLowerCase()}`} aria-hidden="true" />}
     </button>
   );
 }

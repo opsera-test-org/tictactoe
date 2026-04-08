@@ -49,12 +49,12 @@ describe('BoardGrid', () => {
 
   // ── Board state rendering ─────────────────────────────────────────
 
-  it('renders X and O marks from the board array', () => {
+  it('renders X and O shape marks from the board array', () => {
     const board: CellValue[] = ['X', 'O', '', '', '', '', '', '', ''];
     const { cells } = renderBoard({ board });
-    expect(cells[0].textContent).toBe('X');
-    expect(cells[1].textContent).toBe('O');
-    expect(cells[2].textContent).toBe('');
+    expect(cells[0].querySelector('.mark--x')).not.toBeNull();
+    expect(cells[1].querySelector('.mark--o')).not.toBeNull();
+    expect(cells[2].querySelector('.mark')).toBeNull();
   });
 
   it('each cell has the correct data-testid', () => {
@@ -181,6 +181,6 @@ describe('BoardGrid', () => {
         container,
       );
     });
-    expect(container.querySelectorAll('button')[0].textContent).toBe('X');
+    expect(container.querySelectorAll('button')[0].querySelector('.mark--x')).not.toBeNull();
   });
 });
