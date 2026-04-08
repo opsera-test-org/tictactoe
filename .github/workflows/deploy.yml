@@ -10,12 +10,12 @@ concurrency:
 
 jobs:
   deploy:
-    name: Build & Deploy to S3 + CloudFront
+    name: Build & Deploy to Azure Blob Storage
     runs-on: ubuntu-latest
 
     permissions:
       contents: read
-      id-token: write # Required for OIDC-based AWS auth
+      id-token: write # Required for OIDC-based Azure auth
 
     steps:
       - name: Checkout
@@ -39,31 +39,20 @@ jobs:
       - name: Build production bundle
         run: npm run build
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
+      - name: Login to Azure
+        uses: azure/login@v2
         with:
-          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      # Sync hashed assets first with long cache TTL (1 year, immutable)
-      - name: Sync hashed assets to S3
+      - name: Sync dist to Azure Blob Storage
         run: |
-          aws s3 sync dist/assets/ s3://${{ secrets.S3_BUCKET }}/assets/ \
-            --cache-control "max-age=31536000, immutable" \
-            --delete
-
-      # Sync index.html with short cache TTL (1 hour)
-      - name: Sync index.html to S3
-        run: |
-          aws s3 cp dist/index.html s3://${{ secrets.S3_BUCKET }}/index.html \
-            --cache-control "max-age=3600, must-revalidate"
-
-      # Invalidate only index.html on CloudFront (hashed assets never need invalidation)
-      - name: Invalidate CloudFront cache
-        run: |
-          aws cloudfront create-invalidation \
-            --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} \
-            --paths "/index.html"
+          az storage blob sync \
+            --source dist/ \
+            --container '$web' \
+            --account-name ${{ secrets.AZURE_STORAGE_ACCOUNT }} \
+            --delete-destination true
 
       - name: Deployment summary
         run: |

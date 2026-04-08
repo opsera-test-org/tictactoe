@@ -82,7 +82,7 @@ tictactoe/
 | Build Tool   | Vite 6.x            |
 | Test Runner  | Vitest 3.x          |
 | Linter       | ESLint 9.x          |
-| Hosting      | AWS S3 + CloudFront |
+| Hosting      | Azure Blob Storage  |
 | CI/CD        | GitHub Actions      |
 
 ## CI/CD Pipeline
@@ -92,51 +92,30 @@ tictactoe/
 | Trigger                | Workflow     | Steps                                                             |
 | ---------------------- | ------------ | ----------------------------------------------------------------- |
 | Pull Request to `main` | `ci.yml`     | Install → Lint → Build → Test                                     |
-| Push to `main`         | `deploy.yml` | Install → Lint → Test → Build → S3 sync → CloudFront invalidation |
-
-### Cache Strategy
-
-- **Hashed assets** (`/assets/*.js`, `/assets/*.css`): `Cache-Control: max-age=31536000, immutable` — cached for 1 year, never need invalidation
-- **`index.html`**: `Cache-Control: max-age=3600` — refreshed hourly, invalidated on every deploy
+| Push to `main`         | `deploy.yml` | Install → Lint → Test → Build → Azure Blob sync |
 
 ### Required GitHub Secrets
 
 Configure these in **Settings → Secrets and variables → Actions** before the deploy workflow will run:
 
-| Secret                       | Description                                                                               |
-| ---------------------------- | ----------------------------------------------------------------------------------------- |
-| `AWS_DEPLOY_ROLE_ARN`        | ARN of the IAM role to assume via OIDC (e.g. `arn:aws:iam::123456789:role/github-deploy`) |
-| `AWS_REGION`                 | AWS region of the S3 bucket and CloudFront distribution (e.g. `us-east-1`)                |
-| `S3_BUCKET`                  | S3 bucket name (e.g. `tictactoe-prod-assets`)                                             |
-| `CLOUDFRONT_DISTRIBUTION_ID` | CloudFront distribution ID (e.g. `E1ABCDEF2GHIJ`)                                         |
-| `PRODUCTION_DOMAIN`          | Public domain name (e.g. `tictactoe.app`)                                                 |
+| Secret                    | Description                                                                     |
+| ------------------------- | ------------------------------------------------------------------------------- |
+| `AZURE_CLIENT_ID`         | Client ID of the Azure AD app registration used for OIDC federated credentials |
+| `AZURE_TENANT_ID`         | Azure Active Directory tenant ID                                                |
+| `AZURE_SUBSCRIPTION_ID`   | Azure subscription ID                                                           |
+| `AZURE_STORAGE_ACCOUNT`   | Name of the Azure Storage account (e.g. `tictactoeprod`)                       |
+| `PRODUCTION_DOMAIN`       | Public domain name (e.g. `tictactoe.app`)                                      |
 
-### AWS IAM Role Policy
+### Azure Setup
 
-The deploy role requires the following minimum permissions:
-
-```json
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": ["s3:PutObject", "s3:DeleteObject", "s3:ListBucket"],
-      "Resource": ["arn:aws:s3:::YOUR_BUCKET_NAME", "arn:aws:s3:::YOUR_BUCKET_NAME/*"]
-    },
-    {
-      "Effect": "Allow",
-      "Action": ["cloudfront:CreateInvalidation"],
-      "Resource": "arn:aws:cloudfront::ACCOUNT_ID:distribution/DISTRIBUTION_ID"
-    }
-  ]
-}
-```
+1. **Storage account** — enable *Static website* hosting; the `$web` container is created automatically.
+2. **App registration** — create a federated credential for the GitHub repository (`repo:<org>/<repo>:ref:refs/heads/main`).
+3. **Role assignment** — grant the app registration the **Storage Blob Data Contributor** role on the storage account.
 
 ### Rollback
 
-Since all assets are content-hashed, rolling back is as simple as re-running the deploy workflow on the previous commit. S3 versioning should be enabled as an additional safety net. Target rollback time: <60 seconds.
+Re-run the deploy workflow on the previous commit to restore the last known-good build. Target rollback time: <60 seconds.
 
 ## Architecture
 
-All game logic runs client-side with zero backend requirements. The production bundle is served from a CloudFront CDN with 200+ global edge locations, targeting <100ms P99 asset delivery latency worldwide.
+All game logic runs client-side with zero backend requirements. The production bundle is served directly from Azure Blob Storage static website hosting.
