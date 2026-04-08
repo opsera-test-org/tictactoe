@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createGameEngine, checkWin, WIN_LINES } from './gameEngine';
+import { createGameEngine, checkWin, checkDraw, WIN_LINES } from './gameEngine';
 import type { GameEngine, CellValue } from './gameEngine';
 
 describe('GameEngine', () => {
@@ -539,6 +539,220 @@ describe('GameEngine', () => {
       expect(winner).toBeNull();
       expect(winningLine).toBeNull();
       expect(engine.makeMove(0)).toBe(true);
+    });
+  });
+
+  // ─── checkDraw() pure function ────────────────────────────────────────────
+
+  describe('checkDraw()', () => {
+    it('returns false for an empty board', () => {
+      const board = Array<CellValue>(9).fill('');
+      expect(checkDraw(board)).toBe(false);
+    });
+
+    it('returns false when board is partially filled', () => {
+      const board = Array<CellValue>(9).fill('');
+      board[0] = 'X';
+      board[4] = 'O';
+      expect(checkDraw(board)).toBe(false);
+    });
+
+    it('returns false when one cell remains empty', () => {
+      const board: CellValue[] = ['X', 'O', 'X', 'X', 'O', 'O', 'O', 'X', ''];
+      expect(checkDraw(board)).toBe(false);
+    });
+
+    it('returns true when all 9 cells are filled', () => {
+      // Draw board: X O X / X O O / O X X  — no winning line
+      const board: CellValue[] = ['X', 'O', 'X', 'X', 'O', 'O', 'O', 'X', 'X'];
+      expect(checkDraw(board)).toBe(true);
+    });
+
+    it('returns true even when a full board has a winner (caller must check win first)', () => {
+      // All cells filled with X (unrealistic but tests the function in isolation)
+      const board: CellValue[] = ['X', 'X', 'X', 'X', 'X', 'X', 'X', 'X', 'X'];
+      expect(checkDraw(board)).toBe(true);
+    });
+  });
+
+  // ─── Draw detection — full game scenario ─────────────────────────────────
+
+  describe('draw detection', () => {
+    /**
+     * Draw sequence: X=0,2,3,7,8 — O=1,4,5,6
+     * Board result:
+     *   X | O | X
+     *   ----------
+     *   X | O | O
+     *   ----------
+     *   O | X | X
+     * No winning line for either player.
+     */
+    function playDrawGame(eng: GameEngine) {
+      eng.makeMove(0); // X
+      eng.makeMove(1); // O
+      eng.makeMove(2); // X
+      eng.makeMove(4); // O
+      eng.makeMove(3); // X
+      eng.makeMove(5); // O
+      eng.makeMove(7); // X
+      eng.makeMove(6); // O
+      eng.makeMove(8); // X — 9th move, board full, no winner
+    }
+
+    it('status is "draw" after all 9 cells are filled with no winner', () => {
+      playDrawGame(engine);
+      expect(engine.getState().status).toBe('draw');
+    });
+
+    it('winner is null on draw', () => {
+      playDrawGame(engine);
+      expect(engine.getState().winner).toBeNull();
+    });
+
+    it('winningLine is null on draw', () => {
+      playDrawGame(engine);
+      expect(engine.getState().winningLine).toBeNull();
+    });
+
+    it('all 9 cells are filled on draw', () => {
+      playDrawGame(engine);
+      const { board } = engine.getState();
+      expect(board.every((cell) => cell !== '')).toBe(true);
+    });
+
+    it('makeMove returns false after a draw', () => {
+      playDrawGame(engine);
+      expect(engine.makeMove(0)).toBe(false);
+    });
+
+    it('board is not mutated after a rejected post-draw move', () => {
+      playDrawGame(engine);
+      const boardBefore = engine.getState().board.slice();
+      engine.makeMove(0);
+      expect(engine.getState().board).toEqual(boardBefore);
+    });
+
+    it('makeMove returns true on the 9th move (the draw-completing move)', () => {
+      engine.makeMove(0); // X
+      engine.makeMove(1); // O
+      engine.makeMove(2); // X
+      engine.makeMove(4); // O
+      engine.makeMove(3); // X
+      engine.makeMove(5); // O
+      engine.makeMove(7); // X
+      engine.makeMove(6); // O
+      expect(engine.makeMove(8)).toBe(true); // should return true and set draw
+    });
+  });
+
+  // ─── reset() after terminal states ───────────────────────────────────────
+
+  describe('reset() after terminal states', () => {
+    it('reset() after a win restores empty board', () => {
+      // X wins row 0
+      engine.makeMove(0);
+      engine.makeMove(3);
+      engine.makeMove(1);
+      engine.makeMove(4);
+      engine.makeMove(2);
+      engine.reset();
+      expect(engine.getState().board.every((c) => c === '')).toBe(true);
+    });
+
+    it('reset() after a win restores currentPlayer to X', () => {
+      engine.makeMove(0);
+      engine.makeMove(3);
+      engine.makeMove(1);
+      engine.makeMove(4);
+      engine.makeMove(2);
+      engine.reset();
+      expect(engine.getState().currentPlayer).toBe('X');
+    });
+
+    it('reset() after a win sets status back to "playing"', () => {
+      engine.makeMove(0);
+      engine.makeMove(3);
+      engine.makeMove(1);
+      engine.makeMove(4);
+      engine.makeMove(2);
+      engine.reset();
+      expect(engine.getState().status).toBe('playing');
+    });
+
+    it('reset() after a win clears winner and winningLine', () => {
+      engine.makeMove(0);
+      engine.makeMove(3);
+      engine.makeMove(1);
+      engine.makeMove(4);
+      engine.makeMove(2);
+      engine.reset();
+      expect(engine.getState().winner).toBeNull();
+      expect(engine.getState().winningLine).toBeNull();
+    });
+
+    it('reset() after a draw restores empty board', () => {
+      // Play full draw game
+      engine.makeMove(0);
+      engine.makeMove(1);
+      engine.makeMove(2);
+      engine.makeMove(4);
+      engine.makeMove(3);
+      engine.makeMove(5);
+      engine.makeMove(7);
+      engine.makeMove(6);
+      engine.makeMove(8);
+      engine.reset();
+      expect(engine.getState().board.every((c) => c === '')).toBe(true);
+    });
+
+    it('reset() after a draw sets status back to "playing"', () => {
+      engine.makeMove(0);
+      engine.makeMove(1);
+      engine.makeMove(2);
+      engine.makeMove(4);
+      engine.makeMove(3);
+      engine.makeMove(5);
+      engine.makeMove(7);
+      engine.makeMove(6);
+      engine.makeMove(8);
+      engine.reset();
+      expect(engine.getState().status).toBe('playing');
+    });
+
+    it('reset() after a draw restores currentPlayer to X', () => {
+      engine.makeMove(0);
+      engine.makeMove(1);
+      engine.makeMove(2);
+      engine.makeMove(4);
+      engine.makeMove(3);
+      engine.makeMove(5);
+      engine.makeMove(7);
+      engine.makeMove(6);
+      engine.makeMove(8);
+      engine.reset();
+      expect(engine.getState().currentPlayer).toBe('X');
+    });
+
+    it('allows a full new game after reset() from draw', () => {
+      engine.makeMove(0);
+      engine.makeMove(1);
+      engine.makeMove(2);
+      engine.makeMove(4);
+      engine.makeMove(3);
+      engine.makeMove(5);
+      engine.makeMove(7);
+      engine.makeMove(6);
+      engine.makeMove(8);
+      engine.reset();
+      // play a fresh win for X
+      engine.makeMove(0);
+      engine.makeMove(3);
+      engine.makeMove(1);
+      engine.makeMove(4);
+      engine.makeMove(2);
+      expect(engine.getState().status).toBe('win');
+      expect(engine.getState().winner).toBe('X');
     });
   });
 });

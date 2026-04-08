@@ -68,6 +68,14 @@ export function checkWin(
   return null;
 }
 
+/**
+ * Pure function — returns `true` when all 9 cells are filled (draw condition).
+ * Must only be called after confirming no winner exists.
+ */
+export function checkDraw(board: CellValue[]): boolean {
+  return board.every((cell) => cell !== '');
+}
+
 function createInitialState(): GameState {
   return {
     board: Array<CellValue>(9).fill(''),
@@ -103,6 +111,13 @@ export function createGameEngine(): GameEngine {
         status: 'win',
         winner: state.currentPlayer,
         winningLine: [...winLine],
+      };
+    } else if (checkDraw(newBoard)) {
+      // Game over — all 9 cells filled, no winner
+      state = {
+        ...state,
+        board: newBoard,
+        status: 'draw',
       };
     } else {
       state = {
