@@ -35,3 +35,69 @@ h1 {
   letter-spacing: 0.05em;
   color: #e2e8f0;
 }
+
+/* ── Board grid ──────────────────────────────────────────────────── */
+
+.board {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  width: 100%;
+  max-width: 360px;
+}
+
+/* ── Cell ────────────────────────────────────────────────────────── */
+
+.cell {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(2rem, 8vw, 3.5rem);
+  font-weight: 700;
+  border: 2px solid #4a5568;
+  border-radius: 8px;
+  background-color: #2d3748;
+  color: #e2e8f0;
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    transform 0.1s ease;
+  user-select: none;
+  /* Minimum 48×48 px touch target (WCAG 2.5.5) */
+  min-width: 48px;
+  min-height: 48px;
+}
+
+.cell:hover:not(:disabled) {
+  background-color: #3a4a5c;
+  border-color: #718096;
+}
+
+.cell:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.cell:focus-visible {
+  outline: 3px solid #63b3ed;
+  outline-offset: 2px;
+}
+
+/* Occupied cell: not-allowed cursor, no hover effect */
+.cell:disabled,
+.cell--occupied {
+  cursor: not-allowed;
+}
+
+/* Winning cells: highlighted in green */
+.cell--winning {
+  background-color: #276749;
+  border-color: #48bb78;
+  color: #f0fff4;
+}
+
+/* Game-over but non-winning empty cells: dimmed */
+.cell--disabled {
+  opacity: 0.6;
+}
