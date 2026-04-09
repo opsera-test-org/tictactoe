@@ -16,6 +16,11 @@ export function App() {
     }
   }
 
+  function handleNewGame() {
+    engineRef.current.reset();
+    setGameState(engineRef.current.getState());
+  }
+
   // No win condition — game ends only on a draw
   const isGameOver = gameState.status === 'draw';
 
@@ -31,7 +36,7 @@ export function App() {
         />
       )}
 
-      {/* Outcome display — only shown for a draw; wins are ignored */}
+      {/* Outcome display — only shown for a draw */}
       {isGameOver && <OutcomeDisplay status="draw" winner={null} />}
 
       <BoardGrid
@@ -40,6 +45,10 @@ export function App() {
         isGameOver={isGameOver}
         onCellClick={handleCellClick}
       />
+
+      <button type="button" className="btn-new-game" onClick={handleNewGame}>
+        New Game
+      </button>
     </main>
   );
 }

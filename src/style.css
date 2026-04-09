@@ -192,3 +192,37 @@ h1 {
 .cell--disabled {
   opacity: 0.6;
 }
+
+/* ── New Game button ─────────────────────────────────────────────── */
+
+.btn-new-game {
+  margin-top: 0.5rem;
+  padding: 0.6rem 1.75rem;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: #1a1a2e;
+  background-color: #63b3ed;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    transform 0.1s ease;
+  /* Minimum 48 px touch target */
+  min-height: 48px;
+  min-width: 120px;
+}
+
+.btn-new-game:hover {
+  background-color: #4299e1;
+}
+
+.btn-new-game:active {
+  transform: scale(0.96);
+}
+
+.btn-new-game:focus-visible {
+  outline: 3px solid #63b3ed;
+  outline-offset: 3px;
+}

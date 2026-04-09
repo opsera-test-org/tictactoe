@@ -75,40 +75,40 @@ tictactoe/
 
 ## Technology Stack
 
-| Layer        | Technology          |
-| ------------ | ------------------- |
-| Language     | TypeScript 5.x      |
-| UI Framework | Preact 10.x         |
-| Build Tool   | Vite 6.x            |
-| Test Runner  | Vitest 3.x          |
-| Linter       | ESLint 9.x          |
-| Hosting      | Azure Blob Storage  |
-| CI/CD        | GitHub Actions      |
+| Layer        | Technology         |
+| ------------ | ------------------ |
+| Language     | TypeScript 5.x     |
+| UI Framework | Preact 10.x        |
+| Build Tool   | Vite 6.x           |
+| Test Runner  | Vitest 3.x         |
+| Linter       | ESLint 9.x         |
+| Hosting      | Azure Blob Storage |
+| CI/CD        | GitHub Actions     |
 
 ## CI/CD Pipeline
 
 ### How it works
 
-| Trigger                | Workflow     | Steps                                                             |
-| ---------------------- | ------------ | ----------------------------------------------------------------- |
-| Pull Request to `main` | `ci.yml`     | Install → Lint → Build → Test                                     |
+| Trigger                | Workflow     | Steps                                           |
+| ---------------------- | ------------ | ----------------------------------------------- |
+| Pull Request to `main` | `ci.yml`     | Install → Lint → Build → Test                   |
 | Push to `main`         | `deploy.yml` | Install → Lint → Test → Build → Azure Blob sync |
 
 ### Required GitHub Secrets
 
 Configure these in **Settings → Secrets and variables → Actions** before the deploy workflow will run:
 
-| Secret                    | Description                                                                     |
-| ------------------------- | ------------------------------------------------------------------------------- |
-| `AZURE_CLIENT_ID`         | Client ID of the Azure AD app registration used for OIDC federated credentials |
-| `AZURE_TENANT_ID`         | Azure Active Directory tenant ID                                                |
-| `AZURE_SUBSCRIPTION_ID`   | Azure subscription ID                                                           |
-| `AZURE_STORAGE_ACCOUNT`   | Name of the Azure Storage account (e.g. `tictactoeprod`)                       |
-| `PRODUCTION_DOMAIN`       | Public domain name (e.g. `tictactoe.app`)                                      |
+| Secret                  | Description                                                                    |
+| ----------------------- | ------------------------------------------------------------------------------ |
+| `AZURE_CLIENT_ID`       | Client ID of the Azure AD app registration used for OIDC federated credentials |
+| `AZURE_TENANT_ID`       | Azure Active Directory tenant ID                                               |
+| `AZURE_SUBSCRIPTION_ID` | Azure subscription ID                                                          |
+| `AZURE_STORAGE_ACCOUNT` | Name of the Azure Storage account (e.g. `tictactoeprod`)                       |
+| `PRODUCTION_DOMAIN`     | Public domain name (e.g. `tictactoe.app`)                                      |
 
 ### Azure Setup
 
-1. **Storage account** — enable *Static website* hosting; the `$web` container is created automatically.
+1. **Storage account** — enable _Static website_ hosting; the `$web` container is created automatically.
 2. **App registration** — create a federated credential for the GitHub repository (`repo:<org>/<repo>:ref:refs/heads/main`).
 3. **Role assignment** — grant the app registration the **Storage Blob Data Contributor** role on the storage account.
 

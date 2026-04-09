@@ -23,7 +23,14 @@ describe('App', () => {
 
   it('renders a 3x3 board with 9 cells', () => {
     const container = mountApp();
-    expect(container.querySelectorAll('button')).toHaveLength(9);
+    // 9 cell buttons + 1 New Game button
+    expect(container.querySelectorAll('[data-testid]')).toHaveLength(9);
+  });
+
+  it('renders the New Game button', () => {
+    const container = mountApp();
+    expect(container.querySelector('.btn-new-game')).not.toBeNull();
+    expect(container.querySelector('.btn-new-game')?.textContent).toBe('New Game');
   });
 
   it('places X (square mark) on the first cell click', () => {
@@ -115,6 +122,105 @@ describe('App — TurnIndicator integration', () => {
     });
     expect(container.querySelector('.turn-indicator')).toBeNull();
     expect(container.querySelector('.outcome-display')).not.toBeNull();
+  });
+});
+
+describe('App — New Game button', () => {
+  it('New Game button is visible during active gameplay', () => {
+    const container = mountApp();
+    expect(container.querySelector('.btn-new-game')).not.toBeNull();
+  });
+
+  it('New Game button is visible after game ends in a draw', () => {
+    const container = mountApp();
+    const cells = container.querySelectorAll('[data-testid]') as unknown as HTMLButtonElement[];
+    act(() => {
+      for (const idx of FULL_BOARD_ORDER) cells[idx].click();
+    });
+    expect(container.querySelector('.outcome-display')).not.toBeNull();
+    expect(container.querySelector('.btn-new-game')).not.toBeNull();
+  });
+
+  it('clicking New Game clears all marks from the board', () => {
+    const container = mountApp();
+    const cells = container.querySelectorAll('[data-testid]') as unknown as HTMLButtonElement[];
+    act(() => {
+      cells[0].click();
+    }); // place a mark
+    act(() => {
+      cells[1].click();
+    });
+    const newGameBtn = container.querySelector('.btn-new-game') as HTMLButtonElement;
+    act(() => {
+      newGameBtn.click();
+    });
+    expect(container.querySelectorAll('.mark')).toHaveLength(0);
+  });
+
+  it('clicking New Game hides the outcome display', () => {
+    const container = mountApp();
+    const cells = container.querySelectorAll('[data-testid]') as unknown as HTMLButtonElement[];
+    act(() => {
+      for (const idx of FULL_BOARD_ORDER) cells[idx].click();
+    });
+    expect(container.querySelector('.outcome-display')).not.toBeNull();
+    const newGameBtn = container.querySelector('.btn-new-game') as HTMLButtonElement;
+    act(() => {
+      newGameBtn.click();
+    });
+    expect(container.querySelector('.outcome-display')).toBeNull();
+  });
+
+  it('clicking New Game restores Player X turn indicator', () => {
+    const container = mountApp();
+    const cells = container.querySelectorAll('[data-testid]') as unknown as HTMLButtonElement[];
+    act(() => {
+      for (const idx of FULL_BOARD_ORDER) cells[idx].click();
+    });
+    const newGameBtn = container.querySelector('.btn-new-game') as HTMLButtonElement;
+    act(() => {
+      newGameBtn.click();
+    });
+    const indicator = container.querySelector('.turn-indicator');
+    expect(indicator).not.toBeNull();
+    expect(indicator?.querySelector('.turn-indicator__mark--x')).not.toBeNull();
+    expect(indicator?.querySelector('.turn-indicator__moves')?.textContent).toContain('1 of 2');
+  });
+
+  it('clicking New Game mid-game resets correctly', () => {
+    const container = mountApp();
+    const cells = container.querySelectorAll('[data-testid]') as unknown as HTMLButtonElement[];
+    act(() => {
+      cells[0].click();
+    }); // X 1/2
+    act(() => {
+      cells[1].click();
+    }); // X 2/2 → O's turn
+    const newGameBtn = container.querySelector('.btn-new-game') as HTMLButtonElement;
+    act(() => {
+      newGameBtn.click();
+    });
+    // Board is empty and back to X's first move
+    expect(container.querySelectorAll('.mark')).toHaveLength(0);
+    expect(container.querySelector('.turn-indicator__mark--x')).not.toBeNull();
+    expect(container.querySelector('.turn-indicator__moves')?.textContent).toContain('1 of 2');
+  });
+
+  it('can play a full game again after New Game', () => {
+    const container = mountApp();
+    const cells = container.querySelectorAll('[data-testid]') as unknown as HTMLButtonElement[];
+    act(() => {
+      for (const idx of FULL_BOARD_ORDER) cells[idx].click();
+    });
+    const newGameBtn = container.querySelector('.btn-new-game') as HTMLButtonElement;
+    act(() => {
+      newGameBtn.click();
+    });
+    // Play two more moves on the fresh board
+    act(() => {
+      cells[0].click();
+    });
+    expect(cells[0].querySelector('.mark--x')).not.toBeNull();
   });
 });
 
