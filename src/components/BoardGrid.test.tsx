@@ -31,10 +31,10 @@ function renderBoard(props: Partial<Parameters<typeof BoardGrid>[0]> = {}) {
 describe('BoardGrid', () => {
   // ── Structure ─────────────────────────────────────────────────────
 
-  it('renders the board container with role="grid"', () => {
+  it('renders the board container with role="group"', () => {
     const { boardEl } = renderBoard();
     expect(boardEl).toBeTruthy();
-    expect(boardEl.getAttribute('role')).toBe('grid');
+    expect(boardEl.getAttribute('role')).toBe('group');
   });
 
   it('renders exactly 9 cell buttons', () => {

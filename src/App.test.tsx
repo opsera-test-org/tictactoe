@@ -224,6 +224,103 @@ describe('App — New Game button', () => {
   });
 });
 
+describe('App — ARIA live region', () => {
+  it('renders a persistent sr-only status region', () => {
+    const container = mountApp();
+    const live = container.querySelector('.sr-only[role="status"]');
+    expect(live).not.toBeNull();
+    expect(live?.getAttribute('aria-live')).toBe('polite');
+    expect(live?.getAttribute('aria-atomic')).toBe('true');
+  });
+
+  it('announces Player X turn and move 1 of 2 on game start', () => {
+    const container = mountApp();
+    const live = container.querySelector('.sr-only[role="status"]');
+    expect(live?.textContent).toContain('Player X');
+    expect(live?.textContent).toContain('Move 1 of 2');
+  });
+
+  it('updates announcement to move 2 of 2 after X first move', () => {
+    const container = mountApp();
+    const cell0 = container.querySelector('[data-testid="cell-0"]') as HTMLButtonElement;
+    act(() => {
+      cell0.click();
+    });
+    const live = container.querySelector('.sr-only[role="status"]');
+    expect(live?.textContent).toContain('Move 2 of 2');
+  });
+
+  it('announces Player O turn after X uses both moves', () => {
+    const container = mountApp();
+    const cells = container.querySelectorAll('[data-testid]') as unknown as HTMLButtonElement[];
+    act(() => {
+      cells[0].click();
+    }); // X 1/2
+    act(() => {
+      cells[1].click();
+    }); // X 2/2
+    const live = container.querySelector('.sr-only[role="status"]');
+    expect(live?.textContent).toContain('Player O');
+  });
+
+  it('announces draw when board is full', () => {
+    const container = mountApp();
+    const cells = container.querySelectorAll('[data-testid]') as unknown as HTMLButtonElement[];
+    act(() => {
+      for (const idx of FULL_BOARD_ORDER) cells[idx].click();
+    });
+    const live = container.querySelector('.sr-only[role="status"]');
+    expect(live?.textContent?.toLowerCase()).toContain('draw');
+  });
+
+  it('live region persists through game-over transition (never unmounts)', () => {
+    const container = mountApp();
+    const liveBeforeEnd = container.querySelector('.sr-only[role="status"]');
+    const cells = container.querySelectorAll('[data-testid]') as unknown as HTMLButtonElement[];
+    act(() => {
+      for (const idx of FULL_BOARD_ORDER) cells[idx].click();
+    });
+    const liveAfterEnd = container.querySelector('.sr-only[role="status"]');
+    expect(liveBeforeEnd).toBe(liveAfterEnd); // same DOM node — never removed
+  });
+});
+
+describe('App — keyboard accessibility', () => {
+  it('all empty cells are focusable (not disabled)', () => {
+    const container = mountApp();
+    const cells = Array.from(container.querySelectorAll('[data-testid]')) as HTMLButtonElement[];
+    cells.forEach((cell) => expect(cell.disabled).toBe(false));
+  });
+
+  it('occupied cells become non-focusable (disabled)', () => {
+    const container = mountApp();
+    const cell0 = container.querySelector('[data-testid="cell-0"]') as HTMLButtonElement;
+    act(() => {
+      cell0.click();
+    });
+    expect(cell0.disabled).toBe(true);
+  });
+
+  it('cell buttons have aria-labels describing their state', () => {
+    const container = mountApp();
+    const cell0 = container.querySelector('[data-testid="cell-0"]') as HTMLButtonElement;
+    expect(cell0.getAttribute('aria-label')).toContain('Cell 1');
+    expect(cell0.getAttribute('aria-label')).toContain('empty');
+    act(() => {
+      cell0.click();
+    });
+    // After occupation aria-label should reference the mark
+    const cell1 = container.querySelector('[data-testid="cell-1"]') as HTMLButtonElement;
+    expect(cell1.getAttribute('aria-label')).toContain('empty');
+  });
+
+  it('board container has an accessible label', () => {
+    const container = mountApp();
+    const board = container.querySelector('.board');
+    expect(board?.getAttribute('aria-label')).toBe('Tic Tac Toe board');
+  });
+});
+
 describe('App — no-win rule: cells are never highlighted', () => {
   it('outcome display is absent during active gameplay', () => {
     const container = mountApp();

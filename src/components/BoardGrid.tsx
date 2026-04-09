@@ -13,7 +13,7 @@ interface BoardGridProps {
 
 export function BoardGrid({ board, winningLine, isGameOver, onCellClick }: BoardGridProps) {
   return (
-    <div className="board" role="grid" aria-label="Tic Tac Toe board">
+    <div className="board" role="group" aria-label="Tic Tac Toe board">
       {board.map((value, index) => (
         <Cell
           key={index}
