@@ -1,3 +1,5 @@
+/* ── Reset ───────────────────────────────────────────────────────── */
+
 *,
 *::before,
 *::after {
@@ -6,34 +8,61 @@
   padding: 0;
 }
 
+/* ── Root / body ─────────────────────────────────────────────────── */
+
+html {
+  /* Prevent horizontal overflow at any viewport width */
+  overflow-x: hidden;
+}
+
 body {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   background-color: #1a1a2e;
   color: #e0e0e0;
   min-height: 100vh;
   display: flex;
-  align-items: center;
+  /* flex-start keeps content scrollable on short viewports (mobile landscape) */
+  align-items: flex-start;
   justify-content: center;
+  /* Vertical breathing room so content never hugs the edges */
+  padding-block: clamp(1rem, 4vh, 2.5rem);
 }
+
+/* Re-center vertically once there's enough height for the game UI */
+@media (min-height: 560px) {
+  body {
+    align-items: center;
+  }
+}
+
+/* ── App container ───────────────────────────────────────────────── */
 
 #app {
   width: 100%;
-  max-width: 480px;
-  padding: 1rem;
+  /* Fluid horizontal padding: tight on 320 px, relaxed on wider screens */
+  padding-inline: clamp(0.75rem, 4vw, 1.5rem);
 }
+
+/* ── Main layout ─────────────────────────────────────────────────── */
 
 main {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1.5rem;
+  /* Gap scales smoothly from 1 rem to 1.5 rem across viewport widths */
+  gap: clamp(1rem, 3vw, 1.5rem);
+  width: 100%;
 }
 
+/* ── Heading ─────────────────────────────────────────────────────── */
+
 h1 {
-  font-size: 2.5rem;
+  /* Scales from 1.6 rem (320 px) → 2.5 rem (768 px+) */
+  font-size: clamp(1.6rem, 6vw, 2.5rem);
   font-weight: 700;
   letter-spacing: 0.05em;
   color: #e2e8f0;
+  text-align: center;
 }
 
 /* ── Turn indicator ──────────────────────────────────────────────── */
@@ -43,18 +72,19 @@ h1 {
   flex-direction: column;
   align-items: center;
   gap: 0.25rem;
-  min-height: 3.5rem; /* prevents layout shift */
+  min-height: 3.5rem;
 }
 
 .turn-indicator__player {
-  font-size: 1.25rem;
+  /* Scales from 1 rem (mobile) → 1.25 rem (desktop) */
+  font-size: clamp(1rem, 3vw, 1.25rem);
   font-weight: 500;
   color: #cbd5e0;
   letter-spacing: 0.02em;
 }
 
 .turn-indicator__moves {
-  font-size: 0.85rem;
+  font-size: clamp(0.75rem, 2vw, 0.85rem);
   font-weight: 400;
   color: #718096;
   letter-spacing: 0.05em;
@@ -63,48 +93,49 @@ h1 {
 
 .turn-indicator__mark {
   font-weight: 700;
-  font-size: 1.35rem;
+  font-size: 1.15em; /* relative to parent so it scales with it */
 }
 
 .turn-indicator__mark--x {
-  color: #63b3ed; /* blue for X */
+  color: #63b3ed;
 }
 
 .turn-indicator__mark--o {
-  color: #fc8181; /* red for O */
+  color: #fc8181;
 }
 
 /* ── Outcome display ─────────────────────────────────────────────── */
 
 .outcome-display {
   text-align: center;
-  min-height: 2.5rem; /* prevents layout shift */
+  min-height: 2.5rem;
 }
 
 .outcome-display__message {
-  font-size: 1.75rem;
+  /* Scales from 1.25 rem (mobile) → 1.75 rem (desktop) */
+  font-size: clamp(1.25rem, 4vw, 1.75rem);
   font-weight: 700;
   letter-spacing: 0.03em;
 }
 
 .outcome-display__message--win {
-  color: #f6e05e; /* yellow highlight for win */
+  color: #f6e05e;
 }
 
 .outcome-display__message--draw {
-  color: #a0aec0; /* muted for draw */
+  color: #a0aec0;
 }
 
 .outcome-display__winner {
-  font-size: 2rem;
+  font-size: 1.15em;
 }
 
 .outcome-display__winner--x {
-  color: #63b3ed; /* blue for X */
+  color: #63b3ed;
 }
 
 .outcome-display__winner--o {
-  color: #fc8181; /* red for O */
+  color: #fc8181;
 }
 
 /* ── Board grid ──────────────────────────────────────────────────── */
@@ -112,9 +143,11 @@ h1 {
 .board {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
+  /* Gap scales from 4 px (very narrow) → 8 px (normal) */
+  gap: clamp(4px, 1.5vw, 8px);
   width: 100%;
-  max-width: 360px;
+  /* Never wider than available space; grows to 360 px on larger screens */
+  max-width: min(360px, 100%);
 }
 
 /* ── Cell ────────────────────────────────────────────────────────── */
@@ -133,9 +166,9 @@ h1 {
     border-color 0.15s ease,
     transform 0.1s ease;
   user-select: none;
-  /* Minimum 48×48 px touch target (WCAG 2.5.5) */
-  min-width: 48px;
-  min-height: 48px;
+  /* WCAG 2.5.5: minimum 44×44 px touch target on any screen */
+  min-width: 44px;
+  min-height: 44px;
 }
 
 /* ── Mark shapes ─────────────────────────────────────────────────── */
@@ -175,20 +208,17 @@ h1 {
   outline-offset: 2px;
 }
 
-/* Occupied cell: not-allowed cursor, no hover effect */
 .cell:disabled,
 .cell--occupied {
   cursor: not-allowed;
 }
 
-/* Winning cells: highlighted in green */
 .cell--winning {
   background-color: #276749;
   border-color: #48bb78;
   color: #f0fff4;
 }
 
-/* Game-over but non-winning empty cells: dimmed */
 .cell--disabled {
   opacity: 0.6;
 }
@@ -196,9 +226,9 @@ h1 {
 /* ── New Game button ─────────────────────────────────────────────── */
 
 .btn-new-game {
-  margin-top: 0.5rem;
   padding: 0.6rem 1.75rem;
-  font-size: 1rem;
+  /* Font scales slightly on small screens */
+  font-size: clamp(0.9rem, 2.5vw, 1rem);
   font-weight: 600;
   letter-spacing: 0.04em;
   color: #1a1a2e;
@@ -209,7 +239,7 @@ h1 {
   transition:
     background-color 0.15s ease,
     transform 0.1s ease;
-  /* Minimum 48 px touch target */
+  /* WCAG 2.5.5 touch target */
   min-height: 48px;
   min-width: 120px;
 }
@@ -225,4 +255,33 @@ h1 {
 .btn-new-game:focus-visible {
   outline: 3px solid #63b3ed;
   outline-offset: 3px;
+}
+
+/* ── Tablet / desktop enhancements (≥ 480 px) ────────────────────── */
+
+@media (min-width: 480px) {
+  #app {
+    max-width: 480px;
+  }
+
+  .board {
+    max-width: 360px;
+  }
+}
+
+/* ── Wide desktop (≥ 1024 px) ────────────────────────────────────── */
+
+@media (min-width: 1024px) {
+  #app {
+    max-width: 520px;
+  }
+
+  .board {
+    max-width: 400px;
+  }
+
+  h1 {
+    /* Lock heading at max size for large screens */
+    font-size: 2.5rem;
+  }
 }
